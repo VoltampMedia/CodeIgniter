@@ -144,15 +144,18 @@ class CI_Security {
 			return $this->csrf_set_cookie();
 		}
 
+		// this IF statement is the fix
 		// Check if URI has been whitelisted from CSRF checks
 		if ($exclude_uris = config_item('csrf_exclude_uris'))
 		{
 			$uri = load_class('URI', 'core');
-			if (in_array($uri->uri_string(), $exclude_uris))
-			{
-				return $this;
-			}
-		}
+			$uri_string = $uri->uri_string();
+			foreach($exclude_uris as $val){								        // i.e.  exempt = array('one', 'abc/def')
+				if(is_int(strpos($uri_string,$val))) {		 					// uri == 'one'         returns true
+					return $this;												// uri == 'one/two'     returns true
+				}																// uri == 'abc'		    returns false
+			}																	// uri == 'abc/def'     returns true
+		}	
 
 		// Do the tokens exist in both the _POST and _COOKIE arrays?
 		if ( ! isset($_POST[$this->_csrf_token_name]) OR ! isset($_COOKIE[$this->_csrf_cookie_name])
